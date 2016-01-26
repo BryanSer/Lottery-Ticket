@@ -1,0 +1,11 @@
+name: LotteryTicket
+authors: ['Bryan_lzh']
+main: Br.LotteryTicket.LotteryTicket
+version: 1.0
+depend: [Vault,BrAPI]
+
+commands:
+  LotteryTicket:
+    aliases: [lt,彩票]
+    description: 主命令
+    usage: /<command> help
