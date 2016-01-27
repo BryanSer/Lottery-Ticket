@@ -9,6 +9,7 @@ import Br.LotteryTicket.Lotteries.Welfare3D;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -17,7 +17,9 @@ public class LotterTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        Bukkit.broadcastMessage(Utils.sendMessage(Lot.Lottery()));
+        if(this.Lot.isEnable()) {
+            Bukkit.broadcastMessage(Utils.sendMessage(Lot.Lottery()));
+        }
     }
 
     public Lottery getLottery() {

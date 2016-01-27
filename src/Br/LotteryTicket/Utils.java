@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import org.apache.commons.codec.binary.Base64;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -53,16 +54,16 @@ public abstract class Utils {
             Data.SimpCommand.put(s, l.getCode());
         }
         FileConfiguration config = Data.LotteryTicket.getConfig();
-        if (!config.contains("Lottery." + l.getCode())) {
+        if (!config.contains("Lottery." + l.getCode()+ ".Enable")) {
             config.set("Lottery." + l.getCode() + ".Name", l.getName());
             config.set("Lottery." + l.getCode() + ".Times", 0);
             config.set("Lottery." + l.getCode() + ".Enable", false);
-
+            System.out.println("Fuck"+"||||||||||||||||||");
         }
         if (!config.contains("Lottery." + l.getCode() + ".Results")) {
             config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
         }
-        l.setEnable(config.getBoolean("Lottery." + l.getCode() + ".Enable"));
+        l.setEnable(Boolean.valueOf(config.getBoolean("Lottery." + l.getCode() + ".Enable")).booleanValue());
         l.setTimes(config.getInt("Lottery." + l.getCode() + ".Times"));
         l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode()));
         l.loadConfig(config);
