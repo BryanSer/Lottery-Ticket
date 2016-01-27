@@ -4,7 +4,6 @@
  */
 package Br.LotteryTicket;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -38,14 +37,8 @@ public abstract class Utils {
     }
 
     public static String encodeBase64(String s) {
-        try {
-            byte[] b = Base64.encodeBase64(s.getBytes("UTF-8"));
+            byte[] b = Base64.encodeBase64(s.getBytes());
             return new String(b);
-        } catch (UnsupportedEncodingException ex) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c&l编码base64时出现问题"));
-            Bukkit.getConsoleSender().sendMessage(ex.getMessage());
-            return null;
-        }
     }
 
     public static String decodeBase64(String s) {
@@ -53,21 +46,23 @@ public abstract class Utils {
     }
 
     public static void registerLottery(Lottery l) {
-        if (Data.LotteryMap.containsKey(l.getName())) {
-            Data.LotteryMap.remove(l.getName());
+        if (Data.LotteryMap.containsKey(l.getCode())) {
+            Data.LotteryMap.remove(l.getCode());
         }
-        Data.LotteryMap.put(l.getName(), l);
+        Data.LotteryMap.put(l.getCode(), l);
         FileConfiguration config = Data.LotteryTicket.getConfig();
-        if (!config.contains("Lottery." + l.getName())) {
-            config.set("Lottery." + l.getName() + ".Times", 0);
-            config.set("Lottery." + l.getName() + ".Enable", true);
+        if (!config.contains("Lottery." + l.getCode())) {
+            config.set("Lottery." + l.getCode() + ".Name", l.getName());
+            config.set("Lottery." + l.getCode() + ".Times", 0);
+            config.set("Lottery." + l.getCode() + ".Enable", true);
+            
         }
-        if (!config.contains("Lottery." + l.getName() + ".Results")) {
-            config.set("Lottery." + l.getName() + ".Results", new ArrayList<String>());
+        if (!config.contains("Lottery." + l.getCode() + ".Results")) {
+            config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
         }
-        l.setEnable(config.getBoolean("Lottery." + l.getName() + ".Enable"));
-        l.setTimes(config.getInt("Lottery." + l.getName() + ".Times"));
-        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getName() + ".Results"), l.getName()));
+        l.setEnable(config.getBoolean("Lottery." + l.getCode() + ".Enable"));
+        l.setTimes(config.getInt("Lottery." + l.getCode() + ".Times"));
+        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode()));
         l.loadConfig(config);
         Data.LotteryTicket.saveConfig();
         LotterTask LT = new LotterTask();
@@ -94,7 +89,7 @@ public abstract class Utils {
         List<String> Lore = is.getItemMeta().getLore();
         Ticket ticket = new Ticket(is);
         int i = 0;
-        for (String str : Lore) {
+        for (String str : args) {
             if (i == 3) {
                 break;
             }
@@ -103,14 +98,14 @@ public abstract class Utils {
                 ticket.Day = str;
             }
             if (i == 1) {
-                ticket.Amount = Integer.parseInt(str.split("\\*")[0]);
-                ticket.Number = Integer.parseInt(str.split("\\*")[1]);
+                ticket.Amount = Integer.parseInt(str.split("\\*")[1]);
+                ticket.Number = Integer.parseInt(str.split("\\*")[0]);
             }
             if (i == 2) {
                 ticket.Type = str.split("\\*")[0];
                 ticket.Times = Integer.parseInt(str.split("\\*")[1]);
             }
-            String key = args[i].split(" ")[1];
+            String key = Lore.get(i).split(" ")[1];
             if (!key.equalsIgnoreCase(str)) {
                 ticket.Passed = false;
                 return ticket;
@@ -127,7 +122,8 @@ public abstract class Utils {
         int r[] = new int[c.length];
         int o = 0;
         for (char ch : c) {
-            r[o] = Integer.valueOf(ch);
+            r[o] = Integer.valueOf(ch+"");
+            o++;
         }
         return r;
     }

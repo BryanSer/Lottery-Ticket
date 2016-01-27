@@ -19,10 +19,15 @@ public interface Lottery {
 
     /**
      *
-     * @return 返回这个彩票类型的名字(作为类型进行识别)
+     * @return 返回这个彩票类型的名字(不作为类型进行识别)
      */
     public String getName();
-
+    
+    /**
+     *
+     * @return 作为识别码 请不要带中文
+     */
+    public String getCode();
     /**
      *
      * @param b 设置是否启用这个彩票类型

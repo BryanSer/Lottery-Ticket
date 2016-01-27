@@ -26,7 +26,7 @@ public class LotterListener implements Listener {
         if (!evt.getItem().getItemMeta().getDisplayName().contains("§7§o§r")) {
             return;
         }
-        String base64 = evt.getItem().getItemMeta().getLore().get(4);
+        String base64 = evt.getItem().getItemMeta().getLore().get(3);
         base64 = Utils.decodeBase64(base64);
         Ticket ticket = Utils.CheckItem(evt.getItem(), base64);
         if (!ticket.Passed) {

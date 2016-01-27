@@ -11,6 +11,7 @@ import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
 import java.util.List;
 import java.util.Random;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -25,6 +26,7 @@ public class Welfare3D implements Lottery {
     private int Times;
     private double Pirce = 5d;
     private List<Result> Results;
+    private Long Interval;
 
     @Override
     public String getName() {
@@ -54,7 +56,7 @@ public class Welfare3D implements Lottery {
 
     @Override
     public long getInterval() {
-        return 20L * 60L * 60L;// * 6L;
+        return this.Interval;// * 6L;
     }
 
     @Override
@@ -92,10 +94,15 @@ public class Welfare3D implements Lottery {
 
     @Override
     public void loadConfig(FileConfiguration config) {
-        if (!config.contains("Lottery.福彩3D.Pirce")) {
-            config.set("Lottery.福彩3D.Pirce", this.Pirce);
+        if (!config.contains("Lottery.Welfare3D.Pirce")) {
+            config.set("Lottery.Welfare3D.Pirce", this.Pirce);
         }
-        this.Pirce = config.getDouble("Lottery.福彩3D.Pirce");
+        if (!config.contains("Lottery.Welfare3D.Interval_单位小时")) {
+            config.set("Lottery.Welfare3D.Interval_单位小时", 6);
+        }
+        this.Pirce = config.getDouble("Lottery.Welfare3D.Pirce");
+        this.Interval = 20L*60L*60L*Long.valueOf(config.getInt("Lottery.Welfare3D.Interval_单位小时")).longValue();
+        Bukkit.broadcastMessage(""+this.Interval);
     }
 
     @Override
@@ -119,6 +126,9 @@ public class Welfare3D implements Lottery {
                 a++;
             }
             i++;
+            if (i > 2) {
+                break;
+            }
         }
         switch (a) {
             case 0:
@@ -130,12 +140,17 @@ public class Welfare3D implements Lottery {
                 break;
             case 2:
                 LotteryTicket.econ.depositPlayer(p, 10d * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + 10d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了二个数字 获得: " + 10d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
                 break;
             case 3:
                 LotteryTicket.econ.depositPlayer(p, 20d * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + 20d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了三个数字 获得: " + 20d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
                 break;
         }
+    }
+
+    @Override
+    public String getCode() {
+        return "Welfare3D";
     }
 }

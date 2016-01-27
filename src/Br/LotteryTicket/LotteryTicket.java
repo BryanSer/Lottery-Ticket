@@ -74,9 +74,9 @@ public class LotteryTicket extends JavaPlugin {
     public void onDisable() {
         HandlerList.unregisterAll(this);
         for(Lottery l:Data.LotteryMap.values()){
-            config.set("Lottery." + l.getName() + ".Times", l.getTimes());
-            config.set("Lottery." + l.getName() + ".Enable", l.isEnable());
-            config.set("Lottery." + l.getName() + ".Results", Utils.toStringList(l.getResults()));
+            config.set("Lottery." + l.getCode() + ".Times", l.getTimes());
+            config.set("Lottery." + l.getCode() + ".Enable", l.isEnable());
+            config.set("Lottery." + l.getCode() + ".Results", Utils.toStringList(l.getResults()));
             System.out.println(l.getName()+" 已储存");
         }
         this.saveConfig();
@@ -142,9 +142,9 @@ public class LotteryTicket extends JavaPlugin {
                     String day = Utils.getDay();
                     item = Lores.addLore(item, "§b购买日期: " + day);
                     item = Lores.addLore(item, "§a购买数字*数量: " + number + "*" + amount);
-                    item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getName() + "*" + (Lot.getTimes() + 1));
+                    item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getCode() + "*" + (Lot.getTimes() + 1));
                     //年+月+日|数字*数量|彩票类型*期数
-                    String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getName() + "*" + (Lot.getTimes() + 1));
+                    String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getCode() + "*" + (Lot.getTimes() + 1));
                     item = Lores.addLore(item, base64);
                     ((Player) sender).getInventory().addItem(item);
                     sender.sendMessage(Utils.sendMessage("&b&l你已成功购买了 " + Lot.getName() + " 的彩票,请保留好彩票 开奖后右键查看是否获奖"));
@@ -194,7 +194,7 @@ public class LotteryTicket extends JavaPlugin {
             yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
             f.set(config, yamlOptions); //把新的yamlOptions偷梁换柱回去
             if (!config.contains("Lottery.Plugin")) {
-                this.config.set("Lottery.Plugin.Prefix", "[&6&l彩票]");
+                this.config.set("Lottery.Plugin.Prefix", "&6&l[彩票]");
                 this.config.set("Lottery.Plugin.EnableBold", true);
             }
         } catch (ReflectiveOperationException ex) {
