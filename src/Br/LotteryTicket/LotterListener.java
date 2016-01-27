@@ -26,10 +26,23 @@ public class LotterListener implements Listener {
         if (!evt.getItem().getItemMeta().getDisplayName().contains("§7§o§r")) {
             return;
         }
-        String base64 = evt.getItem().getItemMeta().getLore().get(5);
+        String base64 = evt.getItem().getItemMeta().getLore().get(4);
         base64 = Utils.decodeBase64(base64);
-        //  if(!Utils.CheckItem(evt.getItem(), base64)){
-        //         evt.getPlayer().sendMessage(Utils.sendMessage("&c&l你的彩票校验失败"));
-        //      }
+        Ticket ticket = Utils.CheckItem(evt.getItem(), base64);
+        if (!ticket.Passed) {
+            evt.getPlayer().sendMessage(Utils.sendMessage("&c&l你的这张彩票没有通过校验..."));
+        }
+        Lottery Lot = Data.LotteryMap.get(ticket.Type);
+        if (ticket.Times > Lot.getTimes()) {
+            evt.getPlayer().sendMessage(Utils.sendMessage("&6&l抱歉 这张彩票还没开奖"));
+            return;
+        }
+        for (Result r : Lot.getResults()) {
+            if (r.getTimes() == ticket.Times) {
+                Lot.Award(evt.getPlayer(), ticket, r);
+                return;
+            }
+        }
+        evt.getPlayer().sendMessage(Utils.sendMessage("&6&l未找到此彩票的信息 是否超出了兑奖时间?"));
     }
 }

@@ -5,23 +5,37 @@
 package Br.LotteryTicket;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.TimeZone;
 import org.apache.commons.codec.binary.Base64;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.yaml.snakeyaml.DumperOptions;
 
 /**
  *
  * @author Bryan_lzh
  */
 public abstract class Utils {
+
+    public static List<Result> toResult(List<String> list, String Name) {
+        List<Result> l = new ArrayList<>();
+        for (String s : list) {
+            String str[] = s.split("\\|");
+            l.add(new Result(Name, Integer.parseInt(str[0]), Integer.parseInt(str[1])));
+        }
+        return l;
+    }
+
+    public static List<String> toStringList(List<Result> list) {
+        List<String> l = new ArrayList<>();
+        for (Result r : list) {
+            l.add(r.getTimes() + "|" + r.getNumber());
+        }
+        return l;
+    }
 
     public static String encodeBase64(String s) {
         try {
@@ -48,32 +62,18 @@ public abstract class Utils {
             config.set("Lottery." + l.getName() + ".Times", 0);
             config.set("Lottery." + l.getName() + ".Enable", true);
         }
-        DumperOptions yamlOptions = null;
-        try {
-            Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");   //获取类YamlConfiguration里的匿名yamlOptions字段
-            f.setAccessible(true);
-
-            yamlOptions = new DumperOptions() {  //将yamlOptions字段替换为一个DumperOptions的匿名内部类，里面替换了setAllowUnicode方法让其永远无法设置为true
-                private TimeZone timeZone = TimeZone.getDefault();
-
-                @Override
-                public void setAllowUnicode(boolean allowUnicode) {
-                    super.setAllowUnicode(false);
-                }
-
-                @Override
-                public void setLineBreak(DumperOptions.LineBreak lineBreak) {
-                    super.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
-                }
-            };
-
-            yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
-            f.set(Data.LotteryTicket.getConfig(), yamlOptions); //把新的yamlOptions偷梁换柱回去
-        } catch (ReflectiveOperationException ex) {
+        if (!config.contains("Lottery." + l.getName() + ".Results")) {
+            config.set("Lottery." + l.getName() + ".Results", new ArrayList<String>());
         }
         l.setEnable(config.getBoolean("Lottery." + l.getName() + ".Enable"));
         l.setTimes(config.getInt("Lottery." + l.getName() + ".Times"));
+        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getName() + ".Results"), l.getName()));
+        l.loadConfig(config);
         Data.LotteryTicket.saveConfig();
+        LotterTask LT = new LotterTask();
+        LT.setLottery(l);
+        Data.BukkitRunnableList.add(LT);
+        LT.runTaskTimer(Data.LotteryTicket, l.getInterval() / 2l, l.getInterval());
     }
 
     public static String sendMessage(String s) {
@@ -88,24 +88,47 @@ public abstract class Utils {
         return Calendar.getInstance().get(Calendar.YEAR) + "|" + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "|" + Calendar.getInstance().get(Calendar.DATE);
     }
 
-    public static boolean CheckItem(ItemStack is, String s) {
+    public static Ticket CheckItem(ItemStack is, String s) {
         //年+月+日|数字*数量|彩票类型*期数
         String args[] = s.split("\\|");
         List<String> Lore = is.getItemMeta().getLore();
+        Ticket ticket = new Ticket(is);
         int i = 0;
         for (String str : Lore) {
-            if(i==3){
+            if (i == 3) {
                 break;
             }
-            if(i==0){
+            if (i == 0) {
                 str = str.replaceAll("\\+", "|");
+                ticket.Day = str;
+            }
+            if (i == 1) {
+                ticket.Amount = Integer.parseInt(str.split("\\*")[0]);
+                ticket.Number = Integer.parseInt(str.split("\\*")[1]);
+            }
+            if (i == 2) {
+                ticket.Type = str.split("\\*")[0];
+                ticket.Times = Integer.parseInt(str.split("\\*")[1]);
             }
             String key = args[i].split(" ")[1];
-            if(!key.equalsIgnoreCase(str)){
-                return false;
+            if (!key.equalsIgnoreCase(str)) {
+                ticket.Passed = false;
+                return ticket;
             }
             i++;
         }
-        return true;
+        ticket.Passed = true;
+        return ticket;
+    }
+
+    public static int[] toIntArray(int i) {
+        String s = String.valueOf(i);
+        char c[] = s.toCharArray();
+        int r[] = new int[c.length];
+        int o = 0;
+        for (char ch : c) {
+            r[o] = Integer.valueOf(ch);
+        }
+        return r;
     }
 }

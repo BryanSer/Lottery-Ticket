@@ -4,6 +4,7 @@
  */
 package Br.LotteryTicket;
 
+import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -16,10 +17,14 @@ public class LotterTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Bukkit.broadcastMessage(Utils.sendMessage(Lot.Lottery()));
     }
 
     public Lottery getLottery() {
         return this.Lot;
+    }
+
+    public void setLottery(Lottery l) {
+        this.Lot = l;
     }
 }

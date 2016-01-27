@@ -6,17 +6,26 @@ package Br.LotteryTicket;
 
 import Br.API.Lores;
 import Br.LotteryTicket.Lotteries.Welfare3D;
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.TimeZone;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.yaml.snakeyaml.DumperOptions;
 
 /**
  *
@@ -25,6 +34,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class LotteryTicket extends JavaPlugin {
 
     public static Economy econ = null;
+    File dataFolder;  //也就是主类中getDataFolder()的返回值
+    FileConfiguration config;  //替代getConfig()，读取配置文件时就操作它好了
 
     /**
      * @param args the command line arguments
@@ -48,15 +59,27 @@ public class LotteryTicket extends JavaPlugin {
             this.setEnabled(false);
             return;
         }
-        if (!this.getDataFolder().exists()) {
-            this.getDataFolder().mkdirs();
-            this.saveDefaultConfig();
+        try {
+            this.dataFolder = this.getDataFolder();
+            reloadCustomConfig();
+        } catch (Throwable ex) {
+            Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
         }
+        Data.LoadConfig();
+        Bukkit.getPluginManager().registerEvents(new LotterListener(), this);
         Utils.registerLottery(new Welfare3D());
     }
 
     @Override
     public void onDisable() {
+        HandlerList.unregisterAll(this);
+        for(Lottery l:Data.LotteryMap.values()){
+            config.set("Lottery." + l.getName() + ".Times", l.getTimes());
+            config.set("Lottery." + l.getName() + ".Enable", l.isEnable());
+            config.set("Lottery." + l.getName() + ".Results", Utils.toStringList(l.getResults()));
+            System.out.println(l.getName()+" 已储存");
+        }
+        this.saveConfig();
     }
 
     private boolean setupEconomy() {
@@ -119,9 +142,9 @@ public class LotteryTicket extends JavaPlugin {
                     String day = Utils.getDay();
                     item = Lores.addLore(item, "§b购买日期: " + day);
                     item = Lores.addLore(item, "§a购买数字*数量: " + number + "*" + amount);
-                    item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getName()+"*"+(Lot.getTimes() + 1));
+                    item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getName() + "*" + (Lot.getTimes() + 1));
                     //年+月+日|数字*数量|彩票类型*期数
-                    String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getName()+"*"+(Lot.getTimes() + 1));
+                    String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getName() + "*" + (Lot.getTimes() + 1));
                     item = Lores.addLore(item, base64);
                     ((Player) sender).getInventory().addItem(item);
                     sender.sendMessage(Utils.sendMessage("&b&l你已成功购买了 " + Lot.getName() + " 的彩票,请保留好彩票 开奖后右键查看是否获奖"));
@@ -133,5 +156,48 @@ public class LotteryTicket extends JavaPlugin {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public FileConfiguration getConfig() {
+        return this.config;
+    }
+
+    public void reloadCustomConfig() throws Throwable {
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
+        File configFile = new File(dataFolder, "config.yml");
+        if (!configFile.exists()) {
+            configFile.createNewFile();
+        }
+        config = YamlConfiguration.loadConfiguration(configFile);  //加载配置文件
+        DumperOptions yamlOptions = null;
+        try {
+            Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");   //获取类YamlConfiguration里的匿名yamlOptions字段
+            f.setAccessible(true);
+
+            yamlOptions = new DumperOptions() {  //将yamlOptions字段替换为一个DumperOptions的匿名内部类，里面替换了setAllowUnicode方法让其永远无法设置为true
+                private TimeZone timeZone = TimeZone.getDefault();
+
+                @Override
+                public void setAllowUnicode(boolean allowUnicode) {
+                    super.setAllowUnicode(false);
+                }
+
+                @Override
+                public void setLineBreak(DumperOptions.LineBreak lineBreak) {
+                    super.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
+                }
+            };
+
+            yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
+            f.set(config, yamlOptions); //把新的yamlOptions偷梁换柱回去
+            if (!config.contains("Lottery.Plugin")) {
+                this.config.set("Lottery.Plugin.Prefix", "[&6&l彩票]");
+                this.config.set("Lottery.Plugin.EnableBold", true);
+            }
+        } catch (ReflectiveOperationException ex) {
+        }
     }
 }
