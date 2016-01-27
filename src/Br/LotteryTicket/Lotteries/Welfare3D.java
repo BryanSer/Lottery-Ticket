@@ -11,7 +11,6 @@ import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
 import java.util.List;
 import java.util.Random;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -27,6 +26,9 @@ public class Welfare3D implements Lottery {
     private double Pirce = 5d;
     private List<Result> Results;
     private Long Interval;
+    private double v1;
+    private double v2;
+    private double v3;
 
     @Override
     public String getName() {
@@ -98,11 +100,18 @@ public class Welfare3D implements Lottery {
             config.set("Lottery.Welfare3D.Pirce", this.Pirce);
         }
         if (!config.contains("Lottery.Welfare3D.Interval_单位小时")) {
-            config.set("Lottery.Welfare3D.Interval_单位小时", 6);
+            config.set("Lottery.Welfare3D.Interval_单位小时", 6.0);
+        }
+        if (!config.contains("Lottery.Welfare3D.中1个数字的奖励")) {
+            config.set("Lottery.Welfare3D.中1个数字的奖励", 5d);
+            config.set("Lottery.Welfare3D.中2个数字的奖励", 10d);
+            config.set("Lottery.Welfare3D.中3个数字的奖励", 20d);
         }
         this.Pirce = config.getDouble("Lottery.Welfare3D.Pirce");
-        this.Interval = 20L*60L*60L*Long.valueOf(config.getInt("Lottery.Welfare3D.Interval_单位小时")).longValue();
-        Bukkit.broadcastMessage(""+this.Interval);
+        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]).longValue();
+        this.v1 = config.getDouble("Lottery.Welfare3D.中1个数字的奖励");
+        this.v2 = config.getDouble("Lottery.Welfare3D.中2个数字的奖励");
+        this.v3 = config.getDouble("Lottery.Welfare3D.中3个数字的奖励");
     }
 
     @Override
@@ -135,16 +144,16 @@ public class Welfare3D implements Lottery {
                 p.sendMessage(Utils.sendMessage("&6&l可惜 你没有获得任何奖励QAQ"));
                 break;
             case 1:
-                LotteryTicket.econ.depositPlayer(p, 5d * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + 5d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                LotteryTicket.econ.depositPlayer(p, this.v1 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + this.v1 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
                 break;
             case 2:
-                LotteryTicket.econ.depositPlayer(p, 10d * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了二个数字 获得: " + 10d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                LotteryTicket.econ.depositPlayer(p, this.v2 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了二个数字 获得: " + this.v2 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
                 break;
             case 3:
-                LotteryTicket.econ.depositPlayer(p, 20d * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了三个数字 获得: " + 20d * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                LotteryTicket.econ.depositPlayer(p, this.v3 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了三个数字 获得: " + this.v3 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
                 break;
         }
     }
@@ -152,5 +161,15 @@ public class Welfare3D implements Lottery {
     @Override
     public String getCode() {
         return "Welfare3D";
+    }
+
+    @Override
+    public String[] getCommandName() {
+        return new String[]{
+                    "福彩3D",
+                    "3D",
+                    "福利彩票3D",
+                    "Welfare3D"
+                };
     }
 }

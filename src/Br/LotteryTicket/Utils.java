@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import org.apache.commons.codec.binary.Base64;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -37,8 +36,8 @@ public abstract class Utils {
     }
 
     public static String encodeBase64(String s) {
-            byte[] b = Base64.encodeBase64(s.getBytes());
-            return new String(b);
+        byte[] b = Base64.encodeBase64(s.getBytes());
+        return new String(b);
     }
 
     public static String decodeBase64(String s) {
@@ -50,12 +49,15 @@ public abstract class Utils {
             Data.LotteryMap.remove(l.getCode());
         }
         Data.LotteryMap.put(l.getCode(), l);
+        for (String s : l.getCommandName()) {
+            Data.SimpCommand.put(s, l.getCode());
+        }
         FileConfiguration config = Data.LotteryTicket.getConfig();
         if (!config.contains("Lottery." + l.getCode())) {
             config.set("Lottery." + l.getCode() + ".Name", l.getName());
             config.set("Lottery." + l.getCode() + ".Times", 0);
-            config.set("Lottery." + l.getCode() + ".Enable", true);
-            
+            config.set("Lottery." + l.getCode() + ".Enable", false);
+
         }
         if (!config.contains("Lottery." + l.getCode() + ".Results")) {
             config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
@@ -75,6 +77,7 @@ public abstract class Utils {
         s = ChatColor.translateAlternateColorCodes('&', Data.Prefix + s);
         if (!Data.EnableBold) {
             s = s.replaceAll("§l", "");
+            s = s.replaceAll("§L", "");
         }
         return s;
     }
@@ -122,7 +125,7 @@ public abstract class Utils {
         int r[] = new int[c.length];
         int o = 0;
         for (char ch : c) {
-            r[o] = Integer.valueOf(ch+"");
+            r[o] = Integer.valueOf(ch + "");
             o++;
         }
         return r;

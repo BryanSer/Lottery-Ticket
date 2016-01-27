@@ -7,6 +7,7 @@ package Br.LotteryTicket;
 import Br.API.Lores;
 import Br.LotteryTicket.Lotteries.Welfare3D;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.TimeZone;
 import java.util.logging.Level;
@@ -37,13 +38,6 @@ public class LotteryTicket extends JavaPlugin {
     File dataFolder;  //也就是主类中getDataFolder()的返回值
     FileConfiguration config;  //替代getConfig()，读取配置文件时就操作它好了
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        System.out.println(Utils.getDay());
-    }
-
     @Override
     public void onEnable() {
         Data.LotteryTicket = this;
@@ -68,16 +62,22 @@ public class LotteryTicket extends JavaPlugin {
         Data.LoadConfig();
         Bukkit.getPluginManager().registerEvents(new LotterListener(), this);
         Utils.registerLottery(new Welfare3D());
+        try {
+            Metrics metrics = new Metrics(this);
+            metrics.start();
+        } catch (IOException e) {
+            // Failed to submit the stats :-(
+        }
     }
 
     @Override
     public void onDisable() {
         HandlerList.unregisterAll(this);
-        for(Lottery l:Data.LotteryMap.values()){
+        for (Lottery l : Data.LotteryMap.values()) {
             config.set("Lottery." + l.getCode() + ".Times", l.getTimes());
             config.set("Lottery." + l.getCode() + ".Enable", l.isEnable());
             config.set("Lottery." + l.getCode() + ".Results", Utils.toStringList(l.getResults()));
-            System.out.println(l.getName()+" 已储存");
+            System.out.println(l.getName() + " 已储存");
         }
         this.saveConfig();
     }
@@ -102,7 +102,27 @@ public class LotteryTicket extends JavaPlugin {
                 return true;
             }
             if (args[0].equalsIgnoreCase("help")) {
-                //TODO 显示帮助
+                sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
+                sender.sendMessage(Utils.sendMessage("&b&lLotteryTicket v" + this.getDescription().getVersion() + "作者: Bryan_lzh"));
+                sender.sendMessage(Utils.sendMessage("&a /lt help 查看本帮助"));
+                sender.sendMessage(Utils.sendMessage("&a /lt list 查看可用的彩票列表"));
+                sender.sendMessage(Utils.sendMessage("&a /lt buy [彩票参数] [选购的数字] <数量> 购买一张彩票"));
+                sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("list")) {
+                sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
+                sender.sendMessage(Utils.sendMessage("&b目前有的 彩票类型 | &a购买用的命令参数"));
+                int o = 1;
+                for (Lottery lot : Data.LotteryMap.values()) {
+                    String stt = "&d&l[" + o + "] " + lot.getName() + "| 对应命令: ";
+                    for (String sttt : lot.getCommandName()) {
+                        stt += sttt + " ";
+                    }
+                    sender.sendMessage(Utils.sendMessage(stt));
+                    o++;
+                }
+                sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
                 return true;
             }
             if (sender instanceof Player) {
@@ -113,21 +133,26 @@ public class LotteryTicket extends JavaPlugin {
                         return true;
                     }
                     String name = args[1];
-                    if (!Data.LotteryMap.containsKey(name)) {
+
+                    Lottery Lot = Data.Find(name);
+                    if (Lot == null) {
                         sender.sendMessage(Utils.sendMessage("&c&l插件没有找到此彩种"));
                         return true;
                     }
-                    Lottery Lot = Data.LotteryMap.get(name);
+                    if (!Lot.isEnable()) {
+                        sender.sendMessage(Utils.sendMessage("&c&l抱歉 这个彩票类型没有被启用"));
+                        return true;
+                    }
                     int amount = 1;
                     try {
                         amount = Integer.parseInt(args[3]);
                     } catch (Exception e) {
                     }
-                    if (econ.getBalance(sender.getName()) < Lot.getPrice() * amount) {
+                    if (econ.getBalance((Player) sender) < Lot.getPrice() * amount) {
                         sender.sendMessage(Utils.sendMessage("&c&l你没有足够的金钱"));
                         return true;
                     }
-                    econ.withdrawPlayer(sender.getName(), Lot.getPrice() * amount);
+                    econ.withdrawPlayer((Player) sender, Lot.getPrice() * amount);
                     int number = 0;
                     try {
                         number = Integer.parseInt(args[2]);
@@ -135,9 +160,13 @@ public class LotteryTicket extends JavaPlugin {
                         sender.sendMessage(Utils.sendMessage("&c&l参赛错误 请检查你的输入"));
                         return true;
                     }
+                    if(!Lot.isOK(number)){
+                        sender.sendMessage(Utils.sendMessage("&c&l选购的数字错误 请检查你的输入"));
+                        return true;
+                    }
                     ItemStack item = new ItemStack(Material.PAPER);
                     ItemMeta im = item.getItemMeta();
-                    im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&7&o&r&6" + Lot.getName() + " 彩票"));
+                    im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6" + Lot.getName() + " &e彩票"));
                     item.setItemMeta(im);
                     String day = Utils.getDay();
                     item = Lores.addLore(item, "§b购买日期: " + day);

@@ -23,9 +23,17 @@ public class Data {
     public static List<BukkitRunnable> BukkitRunnableList = new ArrayList<>();
     public static LotteryTicket LotteryTicket;
     public static HashMap<String, Lottery> LotteryMap = new HashMap<>();
+    public static HashMap<String,String> SimpCommand = new HashMap<>();
     //Config:
     public static String Prefix;
     public static boolean EnableBold;
+
+    public static Lottery Find(String Name) {
+        if(!Data.SimpCommand.containsKey(Name)){
+            return null;
+        }
+        return Data.LotteryMap.get(Data.SimpCommand.get(Name));
+    }
 
     public static void LoadConfig() {
         FileConfiguration config = Data.LotteryTicket.getConfig();

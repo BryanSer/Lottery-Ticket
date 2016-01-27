@@ -4,7 +4,6 @@
  */
 package Br.LotteryTicket;
 
-import java.util.HashMap;
 import java.util.List;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -101,4 +100,5 @@ public interface Lottery {
      * @param r 该期的彩票结果
      */
     public void Award(Player p,Ticket ticket,Result r);
+    public String[] getCommandName();
 }

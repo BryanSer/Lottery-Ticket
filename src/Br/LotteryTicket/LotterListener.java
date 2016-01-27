@@ -4,10 +4,14 @@
  */
 package Br.LotteryTicket;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 /**
  *
@@ -23,7 +27,13 @@ public class LotterListener implements Listener {
         if (evt.getItem().getType() != Material.PAPER) {
             return;
         }
-        if (!evt.getItem().getItemMeta().getDisplayName().contains("§7§o§r")) {
+        if (!evt.getItem().getItemMeta().hasDisplayName()) {
+            return;
+        }
+        if (!evt.getItem().getItemMeta().getDisplayName().contains("§e彩票")) {
+            return;
+        }
+        if (evt.getItem().getItemMeta().getDisplayName().contains("§d已兑奖")) {
             return;
         }
         String base64 = evt.getItem().getItemMeta().getLore().get(3);
@@ -34,12 +44,20 @@ public class LotterListener implements Listener {
         }
         Lottery Lot = Data.LotteryMap.get(ticket.Type);
         if (ticket.Times > Lot.getTimes()) {
-            evt.getPlayer().sendMessage(Utils.sendMessage("&6&l抱歉 这张彩票还没开奖"));
+            evt.getPlayer().sendMessage(Utils.sendMessage("&e&l抱歉 这张彩票还没开奖"));
             return;
         }
         for (Result r : Lot.getResults()) {
             if (r.getTimes() == ticket.Times) {
                 Lot.Award(evt.getPlayer(), ticket, r);
+                ItemStack item = evt.getItem();
+                evt.getPlayer().getInventory().remove(item);
+                ItemMeta im = item.getItemMeta();
+                im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6&m"+im.getDisplayName().split("§6")[1] + " &r&d已兑奖"));
+                item.setItemMeta(im);
+                item.setAmount(1);
+                item = Br.API.Lores.addLore(item, "&d&l已兑奖");
+                evt.getPlayer().getInventory().addItem(item);
                 return;
             }
         }
