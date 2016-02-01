@@ -15,6 +15,9 @@ import org.bukkit.entity.Player;
  * @author Bryan_lzh
  */
 public interface Lottery {
+    public enum Type{
+        Int,String;
+    }
 
     /**
      *
@@ -45,6 +48,8 @@ public interface Lottery {
      * @return 是否复合
      */
     public boolean isOK(int i);
+    
+    public boolean isOK(String s);
 
     /**
      *
@@ -101,4 +106,6 @@ public interface Lottery {
      */
     public void Award(Player p,Ticket ticket,Result r);
     public String[] getCommandName();
+    
+    public Type getType();
 }

@@ -15,7 +15,9 @@ public class Ticket {
     public String Day;
     public int Amount;
     public int Number;
-    public String Type;
+    public String Result;
+    
+    public String LotteryName;
     public int Times;
     public boolean Passed;
     public Ticket(ItemStack is){

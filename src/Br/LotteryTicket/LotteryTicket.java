@@ -6,10 +6,10 @@ package Br.LotteryTicket;
 
 import Br.API.Lores;
 import Br.LotteryTicket.Lotteries.Welfare3D;
+import Br.LotteryTicket.Lottery.Type;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -128,6 +128,10 @@ public class LotteryTicket extends JavaPlugin {
             }
             if (sender instanceof Player) {
                 if (args[0].equalsIgnoreCase("buy")) {
+                    if (!sender.hasPermission("LotteryTicket.buy")) {
+                        sender.sendMessage(Utils.sendMessage("&c&l你没有购买的权限"));
+                        return true;
+                    }
                     //e.g./lt buy 福彩3D 数字 数量
                     if (args.length < 3) {
                         sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + cmd.getName() + " help 查看帮助"));
@@ -149,35 +153,58 @@ public class LotteryTicket extends JavaPlugin {
                         amount = Integer.parseInt(args[3]);
                     } catch (Exception e) {
                     }
-                    if (econ.getBalance((Player) sender) < Lot.getPrice() * amount) {
+                    if (econ.getBalance(sender.getName()) < Lot.getPrice() * amount) {
                         sender.sendMessage(Utils.sendMessage("&c&l你没有足够的金钱"));
                         return true;
                     }
-                    econ.withdrawPlayer((Player) sender, Lot.getPrice() * amount);
-                    int number = 0;
-                    try {
-                        number = Integer.parseInt(args[2]);
-                    } catch (Exception e) {
-                        sender.sendMessage(Utils.sendMessage("&c&l参赛错误 请检查你的输入"));
-                        return true;
+                    econ.withdrawPlayer(sender.getName(), Lot.getPrice() * amount);
+                    if (Lot.getType() == Type.String) {
+                        String Result;
+                        Result = args[2];
+                        if (!Lot.isOK(Result)) {
+                            sender.sendMessage(Utils.sendMessage("&c&l选购的数字错误 请检查你的输入"));
+                            return true;
+                        }
+                        ItemStack item = new ItemStack(Material.PAPER);
+                        ItemMeta im = item.getItemMeta();
+                        im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6" + Lot.getName() + " &e彩票"));
+                        item.setItemMeta(im);
+                        String day = Utils.getDay();
+                        item = Lores.addLore(item, "§b购买日期: " + day);
+                        item = Lores.addLore(item, "§a购买数字*数量: " + Result + "*" + amount);
+                        item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getCode() + "*" + (Lot.getTimes() + 1));
+                        //年+月+日|数字*数量|彩票类型*期数
+                        String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + Result + "*" + amount + "|" + Lot.getCode() + "*" + (Lot.getTimes() + 1));
+                        item = Lores.addLore(item, base64);
+                        ((Player) sender).getInventory().addItem(item);
+                        sender.sendMessage(Utils.sendMessage("&b&l你已成功购买了 " + Lot.getName() + " 的彩票,请保留好彩票 开奖后右键查看是否获奖"));
                     }
-                    if(!Lot.isOK(number)){
-                        sender.sendMessage(Utils.sendMessage("&c&l选购的数字错误 请检查你的输入"));
-                        return true;
+                    if (Lot.getType() == Type.Int) {
+                        int number = 0;
+                        try {
+                            number = Integer.parseInt(args[2]);
+                        } catch (Exception e) {
+                            sender.sendMessage(Utils.sendMessage("&c&l参赛错误 请检查你的输入"));
+                            return true;
+                        }
+                        if (!Lot.isOK(number)) {
+                            sender.sendMessage(Utils.sendMessage("&c&l选购的数字错误 请检查你的输入"));
+                            return true;
+                        }
+                        ItemStack item = new ItemStack(Material.PAPER);
+                        ItemMeta im = item.getItemMeta();
+                        im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6" + Lot.getName() + " &e彩票"));
+                        item.setItemMeta(im);
+                        String day = Utils.getDay();
+                        item = Lores.addLore(item, "§b购买日期: " + day);
+                        item = Lores.addLore(item, "§a购买数字*数量: " + number + "*" + amount);
+                        item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getCode() + "*" + (Lot.getTimes() + 1));
+                        //年+月+日|数字*数量|彩票类型*期数
+                        String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getCode() + "*" + (Lot.getTimes() + 1));
+                        item = Lores.addLore(item, base64);
+                        ((Player) sender).getInventory().addItem(item);
+                        sender.sendMessage(Utils.sendMessage("&b&l你已成功购买了 " + Lot.getName() + " 的彩票,请保留好彩票 开奖后右键查看是否获奖"));
                     }
-                    ItemStack item = new ItemStack(Material.PAPER);
-                    ItemMeta im = item.getItemMeta();
-                    im.setDisplayName(ChatColor.translateAlternateColorCodes('&', "&6" + Lot.getName() + " &e彩票"));
-                    item.setItemMeta(im);
-                    String day = Utils.getDay();
-                    item = Lores.addLore(item, "§b购买日期: " + day);
-                    item = Lores.addLore(item, "§a购买数字*数量: " + number + "*" + amount);
-                    item = Lores.addLore(item, "§e彩票类型*期数: " + Lot.getCode() + "*" + (Lot.getTimes() + 1));
-                    //年+月+日|数字*数量|彩票类型*期数
-                    String base64 = Utils.encodeBase64(day.replaceAll("\\|", "+") + "|" + number + "*" + amount + "|" + Lot.getCode() + "*" + (Lot.getTimes() + 1));
-                    item = Lores.addLore(item, base64);
-                    ((Player) sender).getInventory().addItem(item);
-                    sender.sendMessage(Utils.sendMessage("&b&l你已成功购买了 " + Lot.getName() + " 的彩票,请保留好彩票 开奖后右键查看是否获奖"));
                 }
             } else {
                 sender.sendMessage(Utils.sendMessage("&c&l请不要在后台执行这些命令"));
@@ -201,13 +228,13 @@ public class LotteryTicket extends JavaPlugin {
         if (!configFile.exists()) {
             configFile.createNewFile();
         }
-        config = YamlConfiguration.loadConfiguration(configFile);  //加载配置文件
+        config = YamlConfiguration.loadConfiguration(configFile);
         DumperOptions yamlOptions = null;
         try {
-            Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");   //获取类YamlConfiguration里的匿名yamlOptions字段
+            Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");
             f.setAccessible(true);
 
-            yamlOptions = new DumperOptions() {  //将yamlOptions字段替换为一个DumperOptions的匿名内部类，里面替换了setAllowUnicode方法让其永远无法设置为true
+            yamlOptions = new DumperOptions() {
                 private TimeZone timeZone = TimeZone.getDefault();
 
                 @Override
@@ -222,7 +249,7 @@ public class LotteryTicket extends JavaPlugin {
             };
 
             yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
-            f.set(config, yamlOptions); //把新的yamlOptions偷梁换柱回去
+            f.set(config, yamlOptions);
             if (!config.contains("Lottery.Plugin")) {
                 this.config.set("Lottery.Plugin.Prefix", "&6&l[彩票]");
                 this.config.set("Lottery.Plugin.EnableBold", true);

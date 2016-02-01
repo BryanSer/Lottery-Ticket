@@ -13,11 +13,18 @@ public class Result {
     private String Name;
     private int Times;
     private int Number;
+    private String Result;
 
     public Result(String name, int times, int number) {
         this.Name = name;
         this.Times = times;
         this.Number = number;
+    }
+
+    public Result(String name, int times, String result) {
+        this.Name = name;
+        this.Times = times;
+        this.Result = result;
     }
 
     public String getName() {
@@ -30,5 +37,9 @@ public class Result {
 
     public int getNumber() {
         return this.Number;
+    }
+
+    public String getResult() {
+        return this.Result;
     }
 }

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import org.apache.commons.codec.binary.Base64;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -54,11 +53,10 @@ public abstract class Utils {
             Data.SimpCommand.put(s, l.getCode());
         }
         FileConfiguration config = Data.LotteryTicket.getConfig();
-        if (!config.contains("Lottery." + l.getCode()+ ".Enable")) {
+        if (!config.contains("Lottery." + l.getCode() + ".Enable")) {
             config.set("Lottery." + l.getCode() + ".Name", l.getName());
             config.set("Lottery." + l.getCode() + ".Times", 0);
-            config.set("Lottery." + l.getCode() + ".Enable", false);
-            System.out.println("Fuck"+"||||||||||||||||||");
+            config.set("Lottery." + l.getCode() + ".Enable", true);
         }
         if (!config.contains("Lottery." + l.getCode() + ".Results")) {
             config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
@@ -103,10 +101,14 @@ public abstract class Utils {
             }
             if (i == 1) {
                 ticket.Amount = Integer.parseInt(str.split("\\*")[1]);
-                ticket.Number = Integer.parseInt(str.split("\\*")[0]);
+                try {
+                    ticket.Number = Integer.parseInt(str.split("\\*")[0]);
+                } catch (Exception e) {
+                    ticket.Result = str.split("\\*")[0];
+                }
             }
             if (i == 2) {
-                ticket.Type = str.split("\\*")[0];
+                ticket.LotteryName = str.split("\\*")[0];
                 ticket.Times = Integer.parseInt(str.split("\\*")[1]);
             }
             String key = Lore.get(i).split(" ")[1];

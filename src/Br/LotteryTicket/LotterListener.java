@@ -42,7 +42,7 @@ public class LotterListener implements Listener {
         if (!ticket.Passed) {
             evt.getPlayer().sendMessage(Utils.sendMessage("&c&l你的这张彩票没有通过校验..."));
         }
-        Lottery Lot = Data.LotteryMap.get(ticket.Type);
+        Lottery Lot = Data.LotteryMap.get(ticket.LotteryName);
         if (ticket.Times > Lot.getTimes()) {
             evt.getPlayer().sendMessage(Utils.sendMessage("&e&l抱歉 这张彩票还没开奖"));
             return;
