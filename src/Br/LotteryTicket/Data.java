@@ -30,7 +30,6 @@ public class Data {
         }
         return Data.LotteryMap.get(Data.SimpCommand.get(Name));
     }
-
     public static void LoadConfig() {
         FileConfiguration config = Data.LotteryTicket.getConfig();
         Data.Prefix = config.getString("Lottery.Plugin.Prefix");
