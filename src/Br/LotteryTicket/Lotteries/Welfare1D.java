@@ -8,6 +8,7 @@ package Br.LotteryTicket.Additions.Lotteries;
 import Br.LotteryTicket.Lottery;
 import Br.LotteryTicket.LotteryTicket;
 import Br.LotteryTicket.Result;
+
 import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
 import java.util.List;
