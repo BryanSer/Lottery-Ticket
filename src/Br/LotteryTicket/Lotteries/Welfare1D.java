@@ -103,7 +103,7 @@ public class Welfare1D implements Lottery {
         }
         this.v = config.getDouble("Lottery.Welfare1D.赢得奖励");
         this.Price = config.getDouble("Lottery.Welfare1D.Price");
-        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare1D.开奖间隔_单位小时")) + "").longValue();
+        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble(("Lottery.Welfare1D.开奖间隔_单位小时")) + "").split("\\.")[0]).longValue();
     }
 
     @Override
