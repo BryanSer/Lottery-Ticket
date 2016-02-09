@@ -7,12 +7,17 @@ package Br.LotteryTicket;
 import Br.API.Lores;
 import Br.LotteryTicket.Lotteries.Welfare3D;
 import Br.LotteryTicket.Lottery.Type;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.HttpsURLConnection;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -35,12 +40,14 @@ import org.yaml.snakeyaml.DumperOptions;
  */
 public class LotteryTicket extends JavaPlugin {
 
+    public static boolean NeedUpdata = false;
     public static Economy econ = null;
     File dataFolder;  //也就是主类中getDataFolder()的返回值
     FileConfiguration config;  //替代getConfig()，读取配置文件时就操作它好了
 
     @Override
     public void onEnable() {
+
         Data.LotteryTicket = this;
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] - Vault未找到,自动卸载插件", getDescription().getName()));
@@ -68,6 +75,20 @@ public class LotteryTicket extends JavaPlugin {
             metrics.start();
         } catch (IOException e) {
             // Failed to submit the stats :-(
+        }
+        try {
+            URL myurl = new URL("https://coding.net/u/Bryan_lzh/p/Lottery-Ticket/git/raw/master/Version");
+            HttpsURLConnection con = (HttpsURLConnection) myurl.openConnection();
+            InputStream ins = con.getInputStream();
+            InputStreamReader isr = new InputStreamReader(ins);
+            BufferedReader in = new BufferedReader(isr);
+            String inputLine= in.readLine();
+            if(!inputLine.equalsIgnoreCase(this.getDescription().getVersion())){
+                LotteryTicket.NeedUpdata = true;
+            }
+            in.close();
+        } catch (IOException ex) {
+            Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

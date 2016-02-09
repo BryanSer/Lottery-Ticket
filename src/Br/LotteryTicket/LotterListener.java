@@ -8,8 +8,10 @@ package Br.LotteryTicket;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -18,6 +20,19 @@ import org.bukkit.inventory.meta.ItemMeta;
  * @author Bryan_lzh
  */
 public class LotterListener implements Listener {
+    
+    @EventHandler(priority=EventPriority.HIGHEST)
+    public void onJoin(PlayerJoinEvent evt){
+        if(evt.getPlayer().isOp()){
+            if(LotteryTicket.NeedUpdata){
+                evt.getPlayer().sendMessage(new String[]{
+                    Utils.sendMessage("&e&lLotteryTicket彩票插件已有新版本"),
+                    Utils.sendMessage("&e&l请联系你们的技术人员或服主更新插件"),
+                    Utils.sendMessage("&6&l地址: http://www.mcbbs.net/thread-547272-1-1.html")
+                });
+            }
+        }
+    }
 
     @EventHandler
     public void UseTicket(PlayerInteractEvent evt) {
