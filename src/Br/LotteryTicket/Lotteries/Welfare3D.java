@@ -23,7 +23,7 @@ public class Welfare3D implements Lottery {
     private String Name = "福彩3D";
     private boolean Enable = false;
     private int Times;
-    private double Pirce = 5d;
+    private double Price = 5d;
     private List<Result> Results;
     private Long Interval;
     private double v1;
@@ -81,7 +81,7 @@ public class Welfare3D implements Lottery {
 
     @Override
     public double getPrice() {
-        return this.Pirce;
+        return this.Price;
     }
 
     @Override
@@ -96,8 +96,13 @@ public class Welfare3D implements Lottery {
 
     @Override
     public void loadConfig(FileConfiguration config) {
-        if (!config.contains("Lottery.Welfare3D.Pirce")) {
-            config.set("Lottery.Welfare3D.Pirce", this.Pirce);
+        if (!config.contains("Lottery.Welfare3D.Price")) {
+            if (config.contains("Lottery.Welfare3D.Pirce")) {
+                config.set("Lottery.Welfare3D.Price", config.getDouble("Lottery.Welfare3D.Pirce"));
+                config.set("Lottery.Welfare3D.Price", null);
+            } else {
+                config.set("Lottery.Welfare3D.Price", this.Price);
+            }
         }
         if (!config.contains("Lottery.Welfare3D.Interval_单位小时")) {
             config.set("Lottery.Welfare3D.Interval_单位小时", 6.0);
@@ -107,7 +112,7 @@ public class Welfare3D implements Lottery {
             config.set("Lottery.Welfare3D.中2个数字的奖励", 10d);
             config.set("Lottery.Welfare3D.中3个数字的奖励", 20d);
         }
-        this.Pirce = config.getDouble("Lottery.Welfare3D.Pirce");
+        this.Price = config.getDouble("Lottery.Welfare3D.Pirce");
         this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]).longValue();
         this.v1 = config.getDouble("Lottery.Welfare3D.中1个数字的奖励");
         this.v2 = config.getDouble("Lottery.Welfare3D.中2个数字的奖励");
@@ -171,5 +176,23 @@ public class Welfare3D implements Lottery {
                     "福利彩票3D",
                     "Welfare3D"
                 };
+    }
+
+    @Override
+    public boolean isOK(String s) {
+        return false;
+    }
+
+    @Override
+    public Type getType() {
+        return Type.Int;
+    }
+
+    @Override
+    public String[] getUsage() {
+        return new String[]{
+            "§6[选购的数字]: 连续的&l3&6个数字 注意 首相不能为0",
+            "^b例如 : 156 | 559"
+        };
     }
 }

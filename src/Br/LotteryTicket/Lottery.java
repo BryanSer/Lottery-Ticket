@@ -18,6 +18,8 @@ public interface Lottery {
     public enum Type{
         Int,String;
     }
+    
+    public String[] getUsage();
 
     /**
      *
@@ -44,11 +46,16 @@ public interface Lottery {
 
     /**
      *
-     * @param i 传入的这个数字是否复合该类型的规则
-     * @return 是否复合
+     * @param i 传入的这个数字是否符合该类型的规则
+     * @return 是否符合
      */
     public boolean isOK(int i);
     
+    /**
+     *
+     *  @param s 传入的这个数字是否符合该类型的规则
+     * @return 是否符合
+     */
     public boolean isOK(String s);
 
     /**

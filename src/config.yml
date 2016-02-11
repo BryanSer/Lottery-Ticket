@@ -1,2 +1,4 @@
 Lottery:
-  
+  Plugin:
+    Prefix: '[&6&l彩票]'
+    EnableBold: true

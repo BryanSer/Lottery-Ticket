@@ -4,6 +4,7 @@
  */
 package Br.LotteryTicket;
 
+import Br.LotteryTicket.Lottery.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -18,32 +19,75 @@ import org.bukkit.inventory.ItemStack;
  */
 public abstract class Utils {
 
-    public static List<Result> toResult(List<String> list, String Name) {
+    /**
+     * 将配置文件中的List转换回Result的List
+     * @param list 配置文件中的List
+     * @param Name 该彩票的名称
+     * @param t 彩票的类型
+     * @return Result的List
+     */
+    public static List<Result> toResult(List<String> list, String Name, Type t) {
         List<Result> l = new ArrayList<>();
-        for (String s : list) {
-            String str[] = s.split("\\|");
-            l.add(new Result(Name, Integer.parseInt(str[0]), Integer.parseInt(str[1])));
+        if (t == Type.Int) {
+            for (String s : list) {
+                String str[] = s.split("\\|");
+                l.add(new Result(Name, Integer.parseInt(str[0]), Integer.parseInt(str[1])));
+            }
+        }
+        if (t == Type.String) {
+            for (String s : list) {
+                String str[] = s.split("\\|");
+                l.add(new Result(Name, Integer.parseInt(str[0]), str[1]));
+            }
         }
         return l;
     }
 
-    public static List<String> toStringList(List<Result> list) {
+    /**
+     * 将Result的List转换为String的List来储存
+     * @param list Result的List
+     * @param t 彩票的类型
+     * @return String的List
+     */
+    public static List<String> toStringList(List<Result> list, Lottery.Type t) {
         List<String> l = new ArrayList<>();
-        for (Result r : list) {
-            l.add(r.getTimes() + "|" + r.getNumber());
+        if (t == Type.Int) {
+            for (Result r : list) {
+                l.add(r.getTimes() + "|" + r.getNumber());
+            }
+        }
+        if (t == Type.String) {
+            for (Result r : list) {
+                l.add(r.getTimes() + "|" + r.getResult());
+            }
         }
         return l;
     }
 
+    /**
+     * base64加密
+     * @param s 要加密的字符串
+     * @return 加密后的字符串
+     */
     public static String encodeBase64(String s) {
         byte[] b = Base64.encodeBase64(s.getBytes());
         return new String(b);
     }
 
+    /**
+     * base64解密
+     * @param s 要解密的字符串
+     * @return 解密后的字符串
+     */
     public static String decodeBase64(String s) {
         return new String(Base64.decodeBase64(s));
     }
 
+    /**
+     * 注册彩票.
+     * 如果没有在此注册彩票的数据将不会读取.
+     * @param l 要注册的彩票 {@link Lottery}
+     */
     public static void registerLottery(Lottery l) {
         if (Data.LotteryMap.containsKey(l.getCode())) {
             Data.LotteryMap.remove(l.getCode());
@@ -63,15 +107,20 @@ public abstract class Utils {
         }
         l.setEnable(Boolean.valueOf(config.getBoolean("Lottery." + l.getCode() + ".Enable")).booleanValue());
         l.setTimes(config.getInt("Lottery." + l.getCode() + ".Times"));
-        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode()));
+        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode(), l.getType()));
         l.loadConfig(config);
         Data.LotteryTicket.saveConfig();
         LotterTask LT = new LotterTask();
         LT.setLottery(l);
-        Data.BukkitRunnableList.add(LT);
+        Data.BukkitRunnableList.put(l.getCode(), LT);
         LT.runTaskTimer(Data.LotteryTicket, l.getInterval() / 2l, l.getInterval());
     }
 
+    /**
+     * 将一个字符串修改成发送给玩家的格式
+     * @param s 字符串
+     * @return 发送给玩家的字符串
+     */
     public static String sendMessage(String s) {
         s = ChatColor.translateAlternateColorCodes('&', Data.Prefix + s);
         if (!Data.EnableBold) {
@@ -81,10 +130,38 @@ public abstract class Utils {
         return s;
     }
 
+    /** 
+     * 将一个字符串组修改为发给玩家的格式
+     * @param str 字符串组
+     * @return 发给玩家的字符串组
+     */
+    public static String[] sendMessage(String[] str) {
+        int i = 0;
+        for (String s : str) {
+            str[i] = ChatColor.translateAlternateColorCodes('&', Data.Prefix + s);
+            if (!Data.EnableBold) {
+                str[i] = str[i].replaceAll("§l", "");
+                str[i] = str[i].replaceAll("§L", "");
+            }
+            i++;
+        }
+        return str;
+    }
+
+    /**
+     *
+     * @return 返回今天的日期
+     */
     public static String getDay() {
         return Calendar.getInstance().get(Calendar.YEAR) + "|" + (Calendar.getInstance().get(Calendar.MONTH) + 1) + "|" + Calendar.getInstance().get(Calendar.DATE);
     }
 
+    /**
+     * 检查彩票数据
+     * @param is 需要检查的物品
+     * @param s 警告base64解密后的数据
+     * @return {@link Ticket}
+     */
     public static Ticket CheckItem(ItemStack is, String s) {
         //年+月+日|数字*数量|彩票类型*期数
         String args[] = s.split("\\|");
@@ -122,6 +199,11 @@ public abstract class Utils {
         return ticket;
     }
 
+    /**
+     * 将一个int的每一位转换成新的数组
+     * @param i
+     * @return
+     */
     public static int[] toIntArray(int i) {
         String s = String.valueOf(i);
         char c[] = s.toCharArray();

@@ -19,7 +19,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
 import net.milkbowl.vault.economy.Economy;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,6 +32,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.yaml.snakeyaml.DumperOptions;
 
 /**
@@ -40,7 +40,7 @@ import org.yaml.snakeyaml.DumperOptions;
  * @author Bryan_lzh
  */
 public class LotteryTicket extends JavaPlugin {
-
+    
     public static boolean NeedUpdata = false;
     public static Economy econ = null;
     File dataFolder;  //也就是主类中getDataFolder()的返回值
@@ -48,7 +48,7 @@ public class LotteryTicket extends JavaPlugin {
 
     @Override
     public void onEnable() {
-
+        
         Data.LotteryTicket = this;
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] - Vault未找到,自动卸载插件", getDescription().getName()));
@@ -83,8 +83,8 @@ public class LotteryTicket extends JavaPlugin {
             InputStream ins = con.getInputStream();
             InputStreamReader isr = new InputStreamReader(ins);
             BufferedReader in = new BufferedReader(isr);
-            String inputLine= in.readLine();
-            if(!inputLine.equalsIgnoreCase(this.getDescription().getVersion())){
+            String inputLine = in.readLine();
+            if (!inputLine.equalsIgnoreCase(this.getDescription().getVersion())) {
                 LotteryTicket.NeedUpdata = true;
             }
             in.close();
@@ -92,19 +92,22 @@ public class LotteryTicket extends JavaPlugin {
             Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     @Override
     public void onDisable() {
         HandlerList.unregisterAll(this);
         for (Lottery l : Data.LotteryMap.values()) {
             config.set("Lottery." + l.getCode() + ".Times", l.getTimes());
             config.set("Lottery." + l.getCode() + ".Enable", l.isEnable());
-            config.set("Lottery." + l.getCode() + ".Results", Utils.toStringList(l.getResults()));
+            config.set("Lottery." + l.getCode() + ".Results", Utils.toStringList(l.getResults(), l.getType()));
             System.out.println(l.getName() + " 已储存");
+        }
+        for (BukkitRunnable br : Data.BukkitRunnableList.values()) {
+            br.cancel();
         }
         this.saveConfig();
     }
-
+    
     private boolean setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return false;
@@ -116,13 +119,32 @@ public class LotteryTicket extends JavaPlugin {
         econ = rsp.getProvider();
         return econ != null;
     }
-
+    
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (cmd.getName().equalsIgnoreCase("lt") || cmd.getName().equalsIgnoreCase("LotteryTicket") || cmd.getName().equalsIgnoreCase("彩票")) {
             if (args.length < 1) {
-                sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + cmd.getName() + " help 查看帮助"));
+                sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + label + " help 查看帮助"));
                 return true;
+            }
+            if (args[0].equalsIgnoreCase("lot") || args[0].equalsIgnoreCase("Lottery")) {
+                if (!sender.isOp() && !sender.hasPermission("LotteryTicket.Lottery")) {
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + label + " help 查看帮助"));
+                    return true;
+                }
+                Lottery Lot = Data.Find(args[1]);
+                if (Lot == null) {
+                    sender.sendMessage(Utils.sendMessage("&c&l插件没有找到此彩种"));
+                    return true;
+                }
+                Lot.Lottery();
+                Data.BukkitRunnableList.get(Lot.getCode()).cancel();
+                Data.BukkitRunnableList.get(Lot.getCode()).runTaskTimer(Data.LotteryTicket, Lot.getInterval() / 2l, Lot.getInterval());
+                sender.sendMessage("§6强行开奖成功");
+                
             }
             if (args[0].equalsIgnoreCase("help")) {
                 sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
@@ -130,6 +152,7 @@ public class LotteryTicket extends JavaPlugin {
                 sender.sendMessage(Utils.sendMessage("&a /lt help 查看本帮助"));
                 sender.sendMessage(Utils.sendMessage("&a /lt list 查看可用的彩票列表"));
                 sender.sendMessage(Utils.sendMessage("&a /lt buy [彩票参数] [选购的数字] <数量> 购买一张彩票"));
+                sender.sendMessage(Utils.sendMessage("&a /lt lot [彩票参数] 强行开奖"));
                 sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
                 return true;
             }
@@ -143,6 +166,7 @@ public class LotteryTicket extends JavaPlugin {
                         stt += sttt + " ";
                     }
                     sender.sendMessage(Utils.sendMessage(stt));
+                    sender.sendMessage(lot.getUsage());
                     o++;
                 }
                 sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
@@ -156,11 +180,11 @@ public class LotteryTicket extends JavaPlugin {
                     }
                     //e.g./lt buy 福彩3D 数字 数量
                     if (args.length < 3) {
-                        sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + cmd.getName() + " help 查看帮助"));
+                        sender.sendMessage(Utils.sendMessage("&c参数不足 请输入/" + label + " help 查看帮助"));
                         return true;
                     }
                     String name = args[1];
-
+                    
                     Lottery Lot = Data.Find(name);
                     if (Lot == null) {
                         sender.sendMessage(Utils.sendMessage("&c&l插件没有找到此彩种"));
@@ -236,12 +260,12 @@ public class LotteryTicket extends JavaPlugin {
         }
         return false;
     }
-
+    
     @Override
     public FileConfiguration getConfig() {
         return this.config;
     }
-
+    
     public void reloadCustomConfig() throws Throwable {
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
@@ -255,21 +279,21 @@ public class LotteryTicket extends JavaPlugin {
         try {
             Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");
             f.setAccessible(true);
-
+            
             yamlOptions = new DumperOptions() {
                 private TimeZone timeZone = TimeZone.getDefault();
-
+                
                 @Override
                 public void setAllowUnicode(boolean allowUnicode) {
                     super.setAllowUnicode(false);
                 }
-
+                
                 @Override
                 public void setLineBreak(DumperOptions.LineBreak lineBreak) {
                     super.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
                 }
             };
-
+            
             yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
             f.set(config, yamlOptions);
             if (!config.contains("Lottery.Plugin")) {

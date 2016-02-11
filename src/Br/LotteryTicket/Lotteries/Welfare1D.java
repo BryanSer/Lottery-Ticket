@@ -4,11 +4,9 @@
  */
 package Br.LotteryTicket.Additions.Lotteries;
 
-
 import Br.LotteryTicket.Lottery;
 import Br.LotteryTicket.LotteryTicket;
 import Br.LotteryTicket.Result;
-
 import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
 import java.util.List;
@@ -82,9 +80,9 @@ public class Welfare1D implements Lottery {
     @Override
     public String Lottery() {
         Random ran = new Random();
-        int i =0;
-        if(ran.nextBoolean()){
-            i=1;
+        int i = 0;
+        if (ran.nextBoolean()) {
+            i = 1;
         }
         this.Times++;
         this.Results.add(new Result(this.Name, this.Times, i));
@@ -119,10 +117,10 @@ public class Welfare1D implements Lottery {
 
     @Override
     public void Award(Player p, Ticket ticket, Result r) {
-        if(ticket.Number == r.getNumber()){
-            LotteryTicket.econ.depositPlayer(p, this.v*ticket.Amount);
+        if (ticket.Number == r.getNumber()) {
+            LotteryTicket.econ.depositPlayer(p, this.v * ticket.Amount);
             p.sendMessage(Utils.sendMessage("&e&l恭喜 你中奖了 获得: " + this.v * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
-        }else {
+        } else {
             p.sendMessage(Utils.sendMessage("&d抱歉 你没有获得任何奖励"));
         }
     }
@@ -140,5 +138,13 @@ public class Welfare1D implements Lottery {
     @Override
     public Type getType() {
         return Type.Int;
+    }
+
+    @Override
+    public String[] getUsage() {
+        return new String[]{
+                    "§6[选购的数字]: 0或1",
+                    "§b例如 0 | 1"
+                };
     }
 }

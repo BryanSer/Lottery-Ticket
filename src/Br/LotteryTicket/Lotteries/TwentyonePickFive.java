@@ -9,7 +9,6 @@ import Br.LotteryTicket.LotteryTicket;
 import Br.LotteryTicket.Result;
 import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
-
 import java.util.List;
 import java.util.Random;
 import org.bukkit.Bukkit;
@@ -233,4 +232,13 @@ public class TwentyonePickFive implements Lottery {
         s = s.substring(0, s.length() - 1);
         return s;
     }
+
+    @Override
+    public String[] getUsage() {
+        return new String[]{
+            "§6[选购的数字]: 5个大于0小于22的数字 用,分割",
+            "§b例如: 1,9,20,19,5 | 6,6,8,19,21"
+        };
+    }
 }
+
