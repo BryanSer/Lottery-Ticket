@@ -112,7 +112,7 @@ public class Welfare3D implements Lottery {
             config.set("Lottery.Welfare3D.中2个数字的奖励", 10d);
             config.set("Lottery.Welfare3D.中3个数字的奖励", 20d);
         }
-        this.Price = config.getDouble("Lottery.Welfare3D.Pirce");
+        this.Price = config.getDouble("Lottery.Welfare3D.Price");
         this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]).longValue();
         this.v1 = config.getDouble("Lottery.Welfare3D.中1个数字的奖励");
         this.v2 = config.getDouble("Lottery.Welfare3D.中2个数字的奖励");
