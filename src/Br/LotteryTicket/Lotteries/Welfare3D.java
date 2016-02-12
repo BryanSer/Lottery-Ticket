@@ -99,7 +99,7 @@ public class Welfare3D implements Lottery {
         if (!config.contains("Lottery.Welfare3D.Price")) {
             if (config.contains("Lottery.Welfare3D.Pirce")) {
                 config.set("Lottery.Welfare3D.Price", config.getDouble("Lottery.Welfare3D.Pirce"));
-                config.set("Lottery.Welfare3D.Price", null);
+                config.set("Lottery.Welfare3D.Pirce", null);
             } else {
                 config.set("Lottery.Welfare3D.Price", this.Price);
             }
