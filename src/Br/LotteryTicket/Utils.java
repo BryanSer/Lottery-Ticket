@@ -12,6 +12,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  *
@@ -21,6 +22,7 @@ public abstract class Utils {
 
     /**
      * 将配置文件中的List转换回Result的List
+     *
      * @param list 配置文件中的List
      * @param Name 该彩票的名称
      * @param t 彩票的类型
@@ -45,6 +47,7 @@ public abstract class Utils {
 
     /**
      * 将Result的List转换为String的List来储存
+     *
      * @param list Result的List
      * @param t 彩票的类型
      * @return String的List
@@ -66,26 +69,37 @@ public abstract class Utils {
 
     /**
      * base64加密
+     *
      * @param s 要加密的字符串
      * @return 加密后的字符串
      */
     public static String encodeBase64(String s) {
-        byte[] b = Base64.encodeBase64(s.getBytes());
-        return new String(b);
+        try {
+            byte[] b = Base64.encodeBase64(s.getBytes());
+            return new String(b);
+        } catch (NoClassDefFoundError e) {
+            String b = com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(s.getBytes());
+            return b;
+        }
     }
 
     /**
      * base64解密
+     *
      * @param s 要解密的字符串
      * @return 解密后的字符串
      */
     public static String decodeBase64(String s) {
-        return new String(Base64.decodeBase64(s));
+        try {
+            return new String(Base64.decodeBase64(s));
+        } catch (NoClassDefFoundError e) {
+            return new String(com.sun.org.apache.xerces.internal.impl.dv.util.Base64.decode(s));
+        }
     }
 
     /**
-     * 注册彩票.
-     * 如果没有在此注册彩票的数据将不会读取.
+     * 注册彩票. 如果没有在此注册彩票的数据将不会读取.
+     *
      * @param l 要注册的彩票 {@link Lottery}
      */
     public static void registerLottery(Lottery l) {
@@ -105,19 +119,20 @@ public abstract class Utils {
         if (!config.contains("Lottery." + l.getCode() + ".Results")) {
             config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
         }
-        l.setEnable(Boolean.valueOf(config.getBoolean("Lottery." + l.getCode() + ".Enable")).booleanValue());
+        l.setEnable(config.getBoolean("Lottery." + l.getCode() + ".Enable"));
         l.setTimes(config.getInt("Lottery." + l.getCode() + ".Times"));
         l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode(), l.getType()));
         l.loadConfig(config);
         Data.LotteryTicket.saveConfig();
         LotterTask LT = new LotterTask();
         LT.setLottery(l);
-        Data.BukkitRunnableList.put(l.getCode(), LT);
-        LT.runTaskTimer(Data.LotteryTicket, l.getInterval() / 2l, l.getInterval());
+        BukkitTask runTaskTimer = LT.runTaskTimer(Data.LotteryTicket, l.getInterval() / 2l, l.getInterval());
+        Data.BukkitTaskList.put(l.getCode(), runTaskTimer);
     }
 
     /**
      * 将一个字符串修改成发送给玩家的格式
+     *
      * @param s 字符串
      * @return 发送给玩家的字符串
      */
@@ -130,8 +145,9 @@ public abstract class Utils {
         return s;
     }
 
-    /** 
+    /**
      * 将一个字符串组修改为发给玩家的格式
+     *
      * @param str 字符串组
      * @return 发给玩家的字符串组
      */
@@ -158,6 +174,7 @@ public abstract class Utils {
 
     /**
      * 检查彩票数据
+     *
      * @param is 需要检查的物品
      * @param s 警告base64解密后的数据
      * @return {@link Ticket}
@@ -200,7 +217,8 @@ public abstract class Utils {
     }
 
     /**
-     * 将一个int的每一位转换成新的数组
+     * 将一个int的每一位转换成新的数组 自用函数
+     *
      * @param i
      * @return
      */

@@ -113,7 +113,7 @@ public class Welfare3D implements Lottery {
             config.set("Lottery.Welfare3D.中3个数字的奖励", 20d);
         }
         this.Price = config.getDouble("Lottery.Welfare3D.Price");
-        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]).longValue();
+        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]);
         this.v1 = config.getDouble("Lottery.Welfare3D.中1个数字的奖励");
         this.v2 = config.getDouble("Lottery.Welfare3D.中2个数字的奖励");
         this.v3 = config.getDouble("Lottery.Welfare3D.中3个数字的奖励");
@@ -191,7 +191,7 @@ public class Welfare3D implements Lottery {
     @Override
     public String[] getUsage() {
         return new String[]{
-            "§6[选购的数字]: 连续的&l3&6个数字 注意 首相不能为0",
+            "§6[选购的数字]: 连续的§l3§6个数字 注意 首项不能为0",
             "^b例如 : 156 | 559"
         };
     }

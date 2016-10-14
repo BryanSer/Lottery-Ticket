@@ -6,7 +6,7 @@ package Br.LotteryTicket;
 
 import java.util.HashMap;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  *
@@ -14,7 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class Data {
 
-    public static HashMap<String,BukkitRunnable> BukkitRunnableList = new HashMap<>();
+    public static HashMap<String,BukkitTask> BukkitTaskList = new HashMap<>();
     public static LotteryTicket LotteryTicket;
     public static HashMap<String, Lottery> LotteryMap = new HashMap<>();
     public static HashMap<String,String> SimpCommand = new HashMap<>();
