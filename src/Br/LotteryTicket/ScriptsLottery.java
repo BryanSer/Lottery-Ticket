@@ -56,7 +56,6 @@ public class ScriptsLottery implements Lottery {
                 while ((read = br.readLine()) != null) {
                     if (read.startsWith("// @")) {
                         String s = read.replaceFirst("// @", "");
-                        System.out.println(s);
                         if (s.startsWith("Usage")) {
                             usage.add(s.replaceFirst("Usage ", ""));
                         } else if (s.startsWith("Code")) {
