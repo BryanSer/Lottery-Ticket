@@ -23,4 +23,34 @@ public class Ticket {
     public Ticket(ItemStack is){
         this.Item = is;
     }
+
+    public String getDay() {
+        return Day;
+    }
+
+    public int getAmount() {
+        return Amount;
+    }
+
+    public int getNumber() {
+        return Number;
+    }
+
+    public String getResult() {
+        return Result;
+    }
+
+    public String getLotteryName() {
+        return LotteryName;
+    }
+
+    public int getTimes() {
+        return Times;
+    }
+
+    public boolean isPassed() {
+        return Passed;
+    }
+    
+    
 }

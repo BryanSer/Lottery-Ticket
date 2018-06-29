@@ -5,12 +5,19 @@
 package Br.LotteryTicket;
 
 import Br.LotteryTicket.Lottery.Type;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.codec.binary.Base64;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -19,6 +26,14 @@ import org.bukkit.scheduler.BukkitTask;
  * @author Bryan_lzh
  */
 public abstract class Utils {
+
+    public static void payToPlayer(Player p, double money) {
+        if (money > 0) {
+            Main.econ.depositPlayer(p.getName(), money);
+        }else if(money < 0){
+            Main.econ.withdrawPlayer(p.getName(), money);
+        }
+    }
 
     /**
      * 将配置文件中的List转换回Result的List
@@ -104,30 +119,98 @@ public abstract class Utils {
      */
     public static void registerLottery(Lottery l) {
         if (Data.LotteryMap.containsKey(l.getCode())) {
-            Data.LotteryMap.remove(l.getCode());
+            return;
         }
         Data.LotteryMap.put(l.getCode(), l);
         for (String s : l.getCommandName()) {
             Data.SimpCommand.put(s, l.getCode());
         }
-        FileConfiguration config = Data.LotteryTicket.getConfig();
-        if (!config.contains("Lottery." + l.getCode() + ".Enable")) {
-            config.set("Lottery." + l.getCode() + ".Name", l.getName());
-            config.set("Lottery." + l.getCode() + ".Times", 0);
-            config.set("Lottery." + l.getCode() + ".Enable", true);
+        File folder = new File(Data.LotteryTicket.getDataFolder(), File.separator + "Lottory" + File.separator);
+        File f = new File(folder, l.getCode() + ".yml");
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-        if (!config.contains("Lottery." + l.getCode() + ".Results")) {
-            config.set("Lottery." + l.getCode() + ".Results", new ArrayList<String>());
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+        if (!cfg.contains("Enable")) {
+            cfg.set("Name", l.getName());
+            cfg.set("Times", 0);
+            cfg.set("Enable", true);
         }
-        l.setEnable(config.getBoolean("Lottery." + l.getCode() + ".Enable"));
-        l.setTimes(config.getInt("Lottery." + l.getCode() + ".Times"));
-        l.setResults(Utils.toResult(config.getStringList("Lottery." + l.getCode() + ".Results"), l.getCode(), l.getType()));
-        l.loadConfig(config);
-        Data.LotteryTicket.saveConfig();
+        if (!cfg.contains("Results")) {
+            cfg.set("Results", new ArrayList<>());
+        }
+        l.setEnable(cfg.getBoolean("Enable"));
+        l.setTimes(cfg.getInt("Times"));
+        l.setResults(Utils.toResult(cfg.getStringList("Results"), l.getCode(), l.getType()));
+        l.loadConfig(cfg);
+        try {
+            cfg.save(f);
+        } catch (IOException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+        }
         LotterTask LT = new LotterTask();
         LT.setLottery(l);
         BukkitTask runTaskTimer = LT.runTaskTimer(Data.LotteryTicket, l.getInterval() / 2l, l.getInterval());
         Data.BukkitTaskList.put(l.getCode(), runTaskTimer);
+    }
+
+    public static void checkFolder() {
+        File folder = new File(Data.LotteryTicket.getDataFolder(), File.separator + "Lottory" + File.separator);
+        if (!folder.exists()) {
+            folder.mkdirs();
+            //import data
+            FileConfiguration config = Data.LotteryTicket.getConfig();
+            ConfigurationSection lots = config.getConfigurationSection("Lottery");
+            for (String key : lots.getKeys(false)) {
+                File f = new File(folder, key + ".yml");
+                try {
+                    f.createNewFile();
+                    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+                    ConfigurationSection se = lots.getConfigurationSection(key);
+                    for (String key1 : se.getKeys(true)) {
+                        cfg.set(key1, se.get(key1));
+                    }
+                    cfg.save(f);
+                } catch (IOException ex) {
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+        File Scripts = new File(Data.LotteryTicket.getDataFolder(), File.separator + "Scripts" + File.separator);
+        if (!Scripts.exists()) {
+            Scripts.mkdirs();
+            try {
+                Br.API.Utils.OutputFile(Data.LotteryTicket, "Welfare3D.js", Scripts);
+                Br.API.Utils.OutputFile(Data.LotteryTicket, "ThirtyPickFive.js", Scripts);
+            } catch (IOException ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public static void saveLottory(Lottery l) {
+        File folder = new File(Data.LotteryTicket.getDataFolder(), File.separator + "Lottory" + File.separator);
+        File f = new File(folder, l.getCode() + ".yml");
+        if (!f.exists()) {
+            try {
+                f.createNewFile();
+            } catch (IOException ex) {
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+        cfg.set("Times", l.getTimes());
+        cfg.set("Enable", l.isEnable());
+        cfg.set("Results", Utils.toStringList(l.getResults(), l.getType()));
+        try {
+            cfg.save(f);
+        } catch (IOException ex) {
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

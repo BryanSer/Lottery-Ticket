@@ -4,6 +4,7 @@
  */
 package Br.LotteryTicket;
 
+import java.io.File;
 import java.util.HashMap;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.scheduler.BukkitTask;
@@ -14,16 +15,16 @@ import org.bukkit.scheduler.BukkitTask;
  */
 public class Data {
 
-    public static HashMap<String,BukkitTask> BukkitTaskList = new HashMap<>();
-    public static LotteryTicket LotteryTicket;
+    public static HashMap<String, BukkitTask> BukkitTaskList = new HashMap<>();
+    public static Main LotteryTicket;
     public static HashMap<String, Lottery> LotteryMap = new HashMap<>();
-    public static HashMap<String,String> SimpCommand = new HashMap<>();
+    public static HashMap<String, String> SimpCommand = new HashMap<>();
     //Config:
     public static String Prefix;
     public static boolean EnableBold;
 
     public static Lottery Find(String Name) {
-        if(!Data.SimpCommand.containsKey(Name)){
+        if (!Data.SimpCommand.containsKey(Name)) {
             return null;
         }
         return Data.LotteryMap.get(Data.SimpCommand.get(Name));
@@ -32,6 +33,16 @@ public class Data {
     public static void LoadConfig() {
         FileConfiguration config = Data.LotteryTicket.getConfig();
         Data.Prefix = config.getString("Lottery.Plugin.Prefix");
-        Data.EnableBold = Boolean.valueOf(config.getBoolean("Lottery.Plugin.EnableBold")).booleanValue();
+        Data.EnableBold = config.getBoolean("Lottery.Plugin.EnableBold");
+    }
+
+    public static void LoadScripts() {
+        File folder = new File(Data.LotteryTicket.getDataFolder(), File.separator + "Scripts" + File.separator);
+        for (File f : folder.listFiles()) {
+            if(f.isFile()){
+                ScriptsLottery sl = new ScriptsLottery(f);
+                Utils.registerLottery(sl);
+            }
+        }
     }
 }

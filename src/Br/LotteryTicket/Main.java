@@ -5,16 +5,16 @@
 package Br.LotteryTicket;
 
 import Br.API.Lores;
-import Br.LotteryTicket.Lotteries.Welfare3D;
+import Br.API.Metrics;
+import Br.API.Metrics.AdvancedPie;
 import Br.LotteryTicket.Lottery.Type;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.TimeZone;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
@@ -24,8 +24,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
@@ -33,22 +31,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.yaml.snakeyaml.DumperOptions;
 
 /**
  *
  * @author Bryan_lzh
  */
-public class LotteryTicket extends JavaPlugin {
+public class Main extends JavaPlugin {
 
     public static boolean NeedUpdata = false;
     public static Economy econ = null;
-    File dataFolder;  //也就是主类中getDataFolder()的返回值
-    FileConfiguration config;  //替代getConfig()，读取配置文件时就操作它好了
+
+    private static final int[] LowestBrAPIVersion = {3, 0, 4};
 
     @Override
     public void onEnable() {
-
         Data.LotteryTicket = this;
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] - Vault未找到,自动卸载插件", getDescription().getName()));
@@ -61,22 +57,27 @@ public class LotteryTicket extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             this.setEnabled(false);
             return;
+        } else {
+            if (!Br.API.Utils.Version.checkVersion(LowestBrAPIVersion)) {
+                getLogger().severe(String.format("[%s] - BrAPI版本过低,自动卸载插件", getDescription().getName()));
+                getServer().getPluginManager().disablePlugin(this);
+                this.setEnabled(false);
+                return;
+            }
         }
-        try {
-            this.dataFolder = this.getDataFolder();
-            reloadCustomConfig();
-        } catch (Throwable ex) {
-            Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        Utils.checkFolder();
         Data.LoadConfig();
         Bukkit.getPluginManager().registerEvents(new LotterListener(), this);
-        Utils.registerLottery(new Welfare3D());
-        try {
-            Metrics metrics = new Metrics(this);
-            metrics.start();
-        } catch (IOException e) {
-            // Failed to submit the stats :-(
-        }
+        Data.LoadScripts();
+        //Utils.registerLottery(new Welfare3D());
+        Metrics m = new Metrics(this);
+        m.addCustomChart(new AdvancedPie("Lotterys", () -> {
+            Map<String, Integer> map = new HashMap<>();
+            for (Lottery l : Data.LotteryMap.values()) {
+                map.put(l.getName(), 1);
+            }
+            return map;
+        }));
         BufferedReader in = null;
         try {
             URL myurl = new URL("https://coding.net/u/Bryan_lzh/p/Lottery-Ticket/git/raw/master/Version");
@@ -86,16 +87,16 @@ public class LotteryTicket extends JavaPlugin {
             in = new BufferedReader(isr);
             String inputLine = in.readLine();
             if (!inputLine.equalsIgnoreCase(this.getDescription().getVersion())) {
-                LotteryTicket.NeedUpdata = true;
+                Main.NeedUpdata = true;
             }
         } catch (IOException ex) {
-            Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
+            Bukkit.getConsoleSender().sendMessage("§c无法获取插件更新信息 请主动访问  http://www.mcbbs.net/thread-547272-1-1.html 来查看更新");
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException ex) {
-                    Logger.getLogger(LotteryTicket.class.getName()).log(Level.SEVERE, null, ex);
+                    Bukkit.getConsoleSender().sendMessage("§c无法获取插件更新信息 请主动访问  http://www.mcbbs.net/thread-547272-1-1.html 来查看更新");
                 }
             }
         }
@@ -105,15 +106,13 @@ public class LotteryTicket extends JavaPlugin {
     public void onDisable() {
         HandlerList.unregisterAll(this);
         for (Lottery l : Data.LotteryMap.values()) {
-            config.set("Lottery." + l.getCode() + ".Times", l.getTimes());
-            config.set("Lottery." + l.getCode() + ".Enable", l.isEnable());
-            config.set("Lottery." + l.getCode() + ".Results", Utils.toStringList(l.getResults(), l.getType()));
+            Utils.saveLottory(l);
             System.out.println(l.getName() + " 已储存");
         }
         for (BukkitTask br : Data.BukkitTaskList.values()) {
             br.cancel();
         }
-        this.saveConfig();
+
     }
 
     private boolean setupEconomy() {
@@ -182,7 +181,9 @@ public class LotteryTicket extends JavaPlugin {
                         stt += sttt + " ";
                     }
                     sender.sendMessage(Utils.sendMessage(stt));
-                    sender.sendMessage(lot.getUsage());
+                    for (String s : lot.getUsage()) {
+                        sender.sendMessage("    " + s);
+                    }
                     o++;
                 }
                 sender.sendMessage(Utils.sendMessage("&e&l------------------------------------"));
@@ -275,48 +276,5 @@ public class LotteryTicket extends JavaPlugin {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public FileConfiguration getConfig() {
-        return this.config;
-    }
-
-    public void reloadCustomConfig() throws Throwable {
-        if (!dataFolder.exists()) {
-            dataFolder.mkdirs();
-        }
-        File configFile = new File(dataFolder, "config.yml");
-        if (!configFile.exists()) {
-            configFile.createNewFile();
-        }
-        config = YamlConfiguration.loadConfiguration(configFile);
-        DumperOptions yamlOptions = null;
-        try {
-            Field f = YamlConfiguration.class.getDeclaredField("yamlOptions");
-            f.setAccessible(true);
-
-            yamlOptions = new DumperOptions() {
-                private TimeZone timeZone = TimeZone.getDefault();
-
-                @Override
-                public void setAllowUnicode(boolean allowUnicode) {
-                    super.setAllowUnicode(false);
-                }
-
-                @Override
-                public void setLineBreak(DumperOptions.LineBreak lineBreak) {
-                    super.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
-                }
-            };
-
-            yamlOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
-            f.set(config, yamlOptions);
-            if (!config.contains("Lottery.Plugin")) {
-                this.config.set("Lottery.Plugin.Prefix", "&6&l[彩票]");
-                this.config.set("Lottery.Plugin.EnableBold", true);
-            }
-        } catch (ReflectiveOperationException ex) {
-        }
     }
 }

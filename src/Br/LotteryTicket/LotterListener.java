@@ -25,7 +25,7 @@ public class LotterListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onJoin(PlayerJoinEvent evt) {
         if (evt.getPlayer().isOp()) {
-            if (LotteryTicket.NeedUpdata) {
+            if (Main.NeedUpdata) {
                 evt.getPlayer().sendMessage(new String[]{
                             Utils.sendMessage("&e&lLotteryTicket彩票插件已有新版本"),
                             Utils.sendMessage("&e&l请联系你们的技术人员或服主更新插件"),

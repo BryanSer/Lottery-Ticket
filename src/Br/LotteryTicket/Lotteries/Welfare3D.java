@@ -5,7 +5,7 @@
 package Br.LotteryTicket.Lotteries;
 
 import Br.LotteryTicket.Lottery;
-import Br.LotteryTicket.LotteryTicket;
+import Br.LotteryTicket.Main;
 import Br.LotteryTicket.Result;
 import Br.LotteryTicket.Ticket;
 import Br.LotteryTicket.Utils;
@@ -15,16 +15,17 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
 /**
- *
+ * @deprecated 已用脚本托管
  * @author Bryan_lzh
  */
+@Deprecated
 public class Welfare3D implements Lottery {
 
     private String Name = "福彩3D";
     private boolean Enable = false;
     private int Times;
-    private double Price = 5d;
     private List<Result> Results;
+    private double Price = 5d;
     private Long Interval;
     private double v1;
     private double v2;
@@ -96,27 +97,27 @@ public class Welfare3D implements Lottery {
 
     @Override
     public void loadConfig(FileConfiguration config) {
-        if (!config.contains("Lottery.Welfare3D.Price")) {
-            if (config.contains("Lottery.Welfare3D.Pirce")) {
-                config.set("Lottery.Welfare3D.Price", config.getDouble("Lottery.Welfare3D.Pirce"));
-                config.set("Lottery.Welfare3D.Pirce", null);
+        if (!config.contains("Price")) {
+            if (config.contains("Pirce")) {
+                config.set("Price", config.getDouble("Pirce"));
+                config.set("Pirce", null);
             } else {
-                config.set("Lottery.Welfare3D.Price", this.Price);
+                config.set("Price", this.Price);
             }
         }
-        if (!config.contains("Lottery.Welfare3D.Interval_单位小时")) {
-            config.set("Lottery.Welfare3D.Interval_单位小时", 6.0);
+        if (!config.contains("Interval_单位小时")) {
+            config.set("Interval_单位小时", 6.0);
         }
-        if (!config.contains("Lottery.Welfare3D.中1个数字的奖励")) {
-            config.set("Lottery.Welfare3D.中1个数字的奖励", 5d);
-            config.set("Lottery.Welfare3D.中2个数字的奖励", 10d);
-            config.set("Lottery.Welfare3D.中3个数字的奖励", 20d);
+        if (!config.contains("中1个数字的奖励")) {
+            config.set("中1个数字的奖励", 5d);
+            config.set("中2个数字的奖励", 10d);
+            config.set("中3个数字的奖励", 20d);
         }
-        this.Price = config.getDouble("Lottery.Welfare3D.Price");
-        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Lottery.Welfare3D.Interval_单位小时") + "").split("\\.")[0]);
-        this.v1 = config.getDouble("Lottery.Welfare3D.中1个数字的奖励");
-        this.v2 = config.getDouble("Lottery.Welfare3D.中2个数字的奖励");
-        this.v3 = config.getDouble("Lottery.Welfare3D.中3个数字的奖励");
+        this.Price = config.getDouble("Price");
+        this.Interval = Long.valueOf((20 * 60 * 60 * config.getDouble("Interval_单位小时") + "").split("\\.")[0]);
+        this.v1 = config.getDouble("中1个数字的奖励");
+        this.v2 = config.getDouble("中2个数字的奖励");
+        this.v3 = config.getDouble("中3个数字的奖励");
     }
 
     @Override
@@ -149,16 +150,16 @@ public class Welfare3D implements Lottery {
                 p.sendMessage(Utils.sendMessage("&6&l可惜 你没有获得任何奖励QAQ"));
                 break;
             case 1:
-                LotteryTicket.econ.depositPlayer(p, this.v1 * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + this.v1 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                Main.econ.depositPlayer(p, this.v1 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了一个数字 获得: " + this.v1 * ticket.Amount + Main.econ.currencyNamePlural()));
                 break;
             case 2:
-                LotteryTicket.econ.depositPlayer(p, this.v2 * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了二个数字 获得: " + this.v2 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                Main.econ.depositPlayer(p, this.v2 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了二个数字 获得: " + this.v2 * ticket.Amount + Main.econ.currencyNamePlural()));
                 break;
             case 3:
-                LotteryTicket.econ.depositPlayer(p, this.v3 * ticket.Amount);
-                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了三个数字 获得: " + this.v3 * ticket.Amount + LotteryTicket.econ.currencyNamePlural()));
+                Main.econ.depositPlayer(p, this.v3 * ticket.Amount);
+                p.sendMessage(Utils.sendMessage("&e&l恭喜 你中了三个数字 获得: " + this.v3 * ticket.Amount + Main.econ.currencyNamePlural()));
                 break;
         }
     }
@@ -192,7 +193,7 @@ public class Welfare3D implements Lottery {
     public String[] getUsage() {
         return new String[]{
             "§6[选购的数字]: 连续的§l3§6个数字 注意 首项不能为0",
-            "^b例如 : 156 | 559"
+            "§b例如 : 156 | 559"
         };
     }
 }

@@ -1,7 +1,7 @@
 name: LotteryTicket
 authors: ['Bryan_lzh']
-main: Br.LotteryTicket.LotteryTicket
-version: 1.23
+main: Br.LotteryTicket.Main
+version: 2.0
 depend: [Vault,BrAPI]
 
 commands:
